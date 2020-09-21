@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="DTOs\Actor\" />
+    <Folder Include="DTOs\Movie\" />
+    <Folder Include="DTOs\Grade\" />
+    <Folder Include="DTOs\MovieActor\" />
+    <Folder Include="DTOs\MovieCategory\" />
+    <Folder Include="DTOs\Category\" />
+    <Folder Include="DTOs\Review\" />
+    <Folder Include="Mappings\" />
+    <Folder Include="ViewModels\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MovieManager.Domain\MovieManager.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
