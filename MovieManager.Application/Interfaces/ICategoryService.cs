@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MovieManager.Application.DTOs.Category;
+using MovieManager.Application.DTOs.Movie;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +10,7 @@ namespace MovieManager.Application.Interfaces
 {
     public interface ICategoryService
     {
-        Task<IQueryable<MovieResultDto>> GetMoviesByCategory(int id);
+        Task<CategoryDetailsDto> GetMoviesByCategory(int id);
         Task Add(CategoryAddDto category);
         Task<CategoryDto> EditGet(int id);
         Task EditPost(CategoryDto category);
