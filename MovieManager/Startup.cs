@@ -12,6 +12,9 @@ using MovieManager.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MovieManager.Application.Configuration;
+using AutoMapper;
+using MovieManager.Infrastructure.Context;
 
 namespace MovieManager
 {
@@ -29,11 +32,15 @@ namespace MovieManager
         {
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                    Configuration.GetConnectionString("MovieManagerDatabase")));
+            services.AddDbContext<MovieManagerContext>(options => options.UseSqlServer(Configuration.GetConnectionString("MovieManagerDatabase")));
+            services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddAutoMapper(typeof(Startup));
             services.AddControllersWithViews();
+            services.AddHttpContextAccessor();
             services.AddRazorPages();
+            services.ResolveDependencies();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

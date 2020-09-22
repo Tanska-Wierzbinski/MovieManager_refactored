@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
 using MovieManager.Infrastructure.Context;
@@ -12,7 +13,7 @@ namespace MovieManager.Infrastructure.Repositories
 {
     public class ReviewRepository : Repository<Review>, IReviewRepository 
     {
-        public ReviewRepository(MovieManagerContext context) : base(context)
+        public ReviewRepository(MovieManagerContext context, IWebHostEnvironment hostEnvironment) : base(context, hostEnvironment)
         {
 
         }

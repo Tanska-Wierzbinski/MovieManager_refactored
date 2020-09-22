@@ -1,4 +1,5 @@
-﻿using MovieManager.Domain.Interfaces;
+﻿using Microsoft.AspNetCore.Hosting;
+using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
 using MovieManager.Infrastructure.Context;
 using System;
@@ -9,7 +10,7 @@ namespace MovieManager.Infrastructure.Repositories
 {
     public class MovieActorRepository : Repository<MovieActor>, IMovieActorRepository
     {
-        public MovieActorRepository(MovieManagerContext context) : base(context)
+        public MovieActorRepository(MovieManagerContext context, IWebHostEnvironment hostEnvironment) : base(context, hostEnvironment)
         {
 
         }

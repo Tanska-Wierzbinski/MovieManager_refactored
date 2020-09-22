@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
 using MovieManager.Infrastructure.Context;
@@ -16,11 +17,13 @@ namespace MovieManager.Infrastructure.Repositories
     {
         protected readonly MovieManagerContext Db;
         protected readonly DbSet<TEntity> DbSet;
+        protected readonly IWebHostEnvironment _hostEnvironment;
 
-        protected Repository(MovieManagerContext db)
+        protected Repository(MovieManagerContext db, IWebHostEnvironment hostEnvironment)
         {
             Db = db;
             DbSet = db.Set<TEntity>();
+            _hostEnvironment = hostEnvironment;
         }
 
         public virtual async Task Add(TEntity entity)

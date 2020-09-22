@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
 using MovieManager.Infrastructure.Context;
@@ -13,9 +14,9 @@ namespace MovieManager.Infrastructure.Repositories
 {
     public class ActorRepository : Repository<Actor>, IActorRepository
     {
-        public ActorRepository(MovieManagerContext context) : base(context)
+        public ActorRepository(MovieManagerContext context, IWebHostEnvironment hostEnvironment) : base(context, hostEnvironment)
         {
-            
+
         }
 
         public override async Task<Actor> GetById(int id)

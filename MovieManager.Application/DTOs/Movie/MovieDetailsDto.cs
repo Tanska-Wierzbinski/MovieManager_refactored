@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MovieManager.Application.DTOs.Movie
 {
-    public class MovieDetailsDto : MovieDto
+    public class MovieDetailsDto : MovieIndexDto
     {
         public IList<ActorDto> Actors { get; set; }
     }
