@@ -8,9 +8,9 @@ using System.Text;
 
 namespace MovieManager.Infrastructure.Repositories
 {
-    public class MovieCategoryRepository : Repository<MovieCategory>, IMovieCategoryRepository
+    public class GradeRepository : Repository<Grade>, IGradeRepository
     {
-        public MovieCategoryRepository(MovieManagerContext context) : base(context)
+        public GradeRepository(MovieManagerContext context) : base(context)
         {
 
         }

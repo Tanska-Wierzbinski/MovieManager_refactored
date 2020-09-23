@@ -1,9 +1,15 @@
-﻿using MovieManager.Application.DTOs;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures.Buffers;
+using MovieManager.Application.DTOs;
 using MovieManager.Application.DTOs.Actor;
 using MovieManager.Application.DTOs.Grade;
 using MovieManager.Application.Interfaces;
+using MovieManager.Domain.Interfaces;
+using MovieManager.Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,56 +17,162 @@ namespace MovieManager.Application.Services
 {
     public class ActorService : IActorService
     {
-        private readonly IActorService _actorService;
+        private readonly IActorRepository _actorRepository;
+        private readonly IMovieRepository _movieRepository;
+        private readonly IGradeRepository _gradeRepository;
+        private readonly IMovieActorRepository _movieActorRepository;
+        private readonly IMapper _mapper;
 
-        public ActorService(IActorService actorService)
+        public ActorService(IActorRepository actorRepository, IMovieRepository movieRepository, IGradeRepository gradeRepository, IMovieActorRepository movieActorRepository, IMapper mapper)
         {
-            _actorService = actorService;
+            _actorRepository = actorRepository;
+            _movieRepository = movieRepository;
+            _gradeRepository = gradeRepository;
+            _movieActorRepository = movieActorRepository;
+            _mapper = mapper;
         }
 
-        public Task<ActorAddDto> AddGet()
+        public ActorAddDto AddGet()
         {
-            throw new NotImplementedException();
+            return new ActorAddDto()
+            {
+                Movies = _movieRepository.GetAll().Select(m => new SelectListItem { Text = m.Name, Value = m.Id.ToString() }).ToList()
+            };
         }
 
-        public Task AddGrade(GradeAddDto grade)
+        public async Task AddPost(ActorAddDto actor)
         {
-            throw new NotImplementedException();
+            var newActor = _mapper.Map<Actor>(actor);
+            await _actorRepository.UploadImage(actor.ImageFile, newActor);
+            await _actorRepository.Add(newActor);
+            //foreach (var movie in actor.MovieIds)
+            //{
+            //    var newMovieActor = new MovieActor()
+            //    {
+            //        MovieId = movie,
+            //        ActorId = newActor.Id
+            //    };
+            //    await _movieActorRepository.Add(newMovieActor);
+            //}                                                                 DO PRZETESTOWANIA Z MAPPEREM
         }
 
-        public Task AddPost(ActorAddDto actor)
+        public async Task AddGrade(GradeAddDto grade)
         {
-            throw new NotImplementedException();
+            await _gradeRepository.Add(_mapper.Map<Grade>(grade));
         }
 
-        public Task<ActorEditDto> EditGet(int id)
+        public async Task<ActorEditDto> EditGet(int id)
         {
-            throw new NotImplementedException();
+            var result = _mapper.Map<ActorEditDto>(await _actorRepository.GetById(id));
+            //result.Movies = _movieRepository.GetAll().Select(m => new SelectListItem { Text = m.Name, Value = m.Id.ToString() }).ToList();
+            //result.MovieIds = _movieActorRepository.GetAll().Where(ma=>ma.ActorId == id).Select(ma=>ma.MovieId).ToArray();
+
+            return result;
         }
 
-        public Task EditPost(ActorEditDto actor)
+        public async Task EditPost(ActorEditDto actor)
         {
-            throw new NotImplementedException();
+            var editedActor = _mapper.Map<Actor>(actor);
+            await _actorRepository.UploadImage(actor.ImageFile, editedActor);
+            //foreach (var movie in actor.MovieIds)
+            //{
+            //    var newMovieActor = new MovieActor()
+            //    {
+            //        MovieId = movie,
+            //        ActorId = editedActor.Id
+            //    };
+            //    await _movieActorRepository.Add(newMovieActor);
+            //}                                                                   DO PRZETESTOWANIA Z MAPPEERM
+            await _actorRepository.Update(editedActor);
         }
 
-        public Task<ActorIndexDto> GetAllForIndex(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 5)
+        public async Task<ActorIndexDto> GetAllForIndex(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 5)
         {
-            throw new NotImplementedException();
+            ActorIndexDto actorsForIndex = new ActorIndexDto()
+            {
+                Actors = _mapper.ProjectTo<ActorDto>(_actorRepository.GetAll()).AsEnumerable(),
+                GradeMin = gradeMin,
+                GradeMax = gradeMax == 0 ? gradeMin : gradeMax,
+                YearMax = yearMax,
+                YearMin = yearMin == 0 ? yearMax : yearMin,
+                Gender = gender,
+                Countries = countries,
+                SortOrder = sortOrder,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+            Filter(actorsForIndex);
+            Sort(sortOrder, actorsForIndex.Actors);             ////////   DODAC  STRONNICOWANIE
+
+            return actorsForIndex;
         }
 
-        public Task<ActorDto> GetById()
+        private void Filter(ActorIndexDto actorsForIndex)
         {
-            throw new NotImplementedException();
+            if (actorsForIndex.Countries.Length != 0)
+            {
+                foreach (var country in actorsForIndex.Countries)
+                {
+                    actorsForIndex.Actors = actorsForIndex.Actors.Intersect(actorsForIndex.Actors.Where(a => a.Country == country));
+                }
+            }
+            actorsForIndex.Actors = actorsForIndex.Gender != null ? actorsForIndex.Actors.Where(m => m.Gender == actorsForIndex.Gender)
+                                                                                         .Where(m => m.BornDate.Year >= actorsForIndex.YearMin && m.BornDate.Year <= actorsForIndex.YearMax)//;
+                                                                                         .Where(m => m.Grades.Any())
+                                                                                            .Where(m => m.Grades
+                                                                                                .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
+                                                                                                    .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1)
+                                                                  : actorsForIndex.Actors.Where(m => m.BornDate.Year >= actorsForIndex.YearMin && m.BornDate.Year <= actorsForIndex.YearMax)//;
+                                                                                         .Where(m => m.Grades.Any())
+                                                                                            .Where(m => m.Grades
+                                                                                                .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
+                                                                                                    .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1);
         }
 
-        public Task<ActorDetailsDto> GetDetails(int id)
+        private void Sort(string sortOrder, IEnumerable<ActorDto> actors)
         {
-            throw new NotImplementedException();
+            switch (sortOrder)
+            {
+                case "nameDesc":
+                    actors = actors.OrderByDescending(m => m.LastName);
+                    break;
+                case "bornDesc":
+                    actors = actors.OrderByDescending(m => m.BornDate);
+                    break;
+                case "born":
+                    actors = actors.OrderBy(m => m.BornDate);
+                    break;
+                case "gradeDesc":
+                    actors = actors.Where(m => m.Grades.Any()).OrderByDescending(m => m.Grades.Average(k => k.GradeValue)).Union(actors);
+                    break;
+                case "grade":
+                    actors = actors.Where(m => m.Grades.Any()).OrderBy(m => m.Grades.Average(k => k.GradeValue)).Union(actors);
+                    break;
+                case "quantityGradeDesc":
+                    actors = actors.Where(m => m.Grades.Any()).OrderByDescending(m => m.Grades.Count()).Union(actors);
+                    break;
+                case "quantityGrade":
+                    actors = actors.Where(m => m.Grades.Any()).OrderBy(m => m.Grades.Count()).Union(actors);
+                    break;
+                default:
+                    actors = actors.OrderBy(m => m.LastName);
+                    break;
+            }
+        }
+        public async Task<ActorDto> GetById(int id)
+        {
+            return _mapper.Map<ActorDto>(await _actorRepository.GetById(id));
         }
 
-        public Task<bool> Remove(int id)
+        public async Task<ActorDetailsDto> GetDetails(int id)
         {
-            throw new NotImplementedException();
+            return _mapper.Map<ActorDetailsDto>(await _actorRepository.GetById(id));
+        }
+
+        public async Task<bool> Remove(int id)
+        {
+            await _actorRepository.Remove(await _actorRepository.GetById(id));
+            return true;
         }
     }
 }

@@ -10,7 +10,7 @@ namespace MovieManager.Infrastructure.Repositories
 {
     public class MovieActorRepository : Repository<MovieActor>, IMovieActorRepository
     {
-        public MovieActorRepository(MovieManagerContext context, IWebHostEnvironment hostEnvironment) : base(context, hostEnvironment)
+        public MovieActorRepository(MovieManagerContext context) : base(context)
         {
 
         }

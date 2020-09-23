@@ -13,7 +13,7 @@ namespace MovieManager.Infrastructure.Repositories
 {
     public class CategoryRepository : Repository<Category>, ICategoryRepository
     {
-        public CategoryRepository(MovieManagerContext context, IWebHostEnvironment hostEnvironment) : base(context, hostEnvironment)
+        public CategoryRepository(MovieManagerContext context) : base(context)
         {
 
         }

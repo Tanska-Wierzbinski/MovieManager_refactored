@@ -13,7 +13,7 @@ namespace MovieManager.Infrastructure.Repositories
 {
     public class ReviewRepository : Repository<Review>, IReviewRepository 
     {
-        public ReviewRepository(MovieManagerContext context, IWebHostEnvironment hostEnvironment) : base(context, hostEnvironment)
+        public ReviewRepository(MovieManagerContext context) : base(context)
         {
 
         }

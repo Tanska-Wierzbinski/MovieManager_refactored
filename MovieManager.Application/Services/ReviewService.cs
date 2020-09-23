@@ -1,5 +1,8 @@
-﻿using MovieManager.Application.DTOs.Review;
+﻿using AutoMapper;
+using MovieManager.Application.DTOs.Review;
 using MovieManager.Application.Interfaces;
+using MovieManager.Domain.Interfaces;
+using MovieManager.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,29 +12,39 @@ namespace MovieManager.Application.Services
 {
     public class ReviewService : IReviewService
     {
-        public Task AddPost(ReviewAddDto review)
+        private readonly IReviewRepository _reviewRepository;
+        private readonly IMapper _mapper;
+
+        public ReviewService(IReviewRepository reviewRepository, IMapper mapper)
         {
-            throw new NotImplementedException();
+            _reviewRepository = reviewRepository;
+            _mapper = mapper;
         }
 
-        public Task<ReviewDto> EditGet(int id)
+        public async Task AddPost(ReviewAddDto review)
         {
-            throw new NotImplementedException();
+            await _reviewRepository.Add(_mapper.Map<Review>(review));
         }
 
-        public Task EditPost(ReviewDto review)
+        public async Task<ReviewDto> EditGet(int id)
         {
-            throw new NotImplementedException();
+            return _mapper.Map<ReviewDto>(await _reviewRepository.GetById(id));
         }
 
-        public Task<ReviewDto> GetById()
+        public async Task EditPost(ReviewDto review)
         {
-            throw new NotImplementedException();
+            await _reviewRepository.Update(_mapper.Map<Review>(review));
         }
 
-        public Task<bool> Remove(int id)
+        public async Task<ReviewDto> GetById(int id)
         {
-            throw new NotImplementedException();
+            return _mapper.Map<ReviewDto>(await _reviewRepository.GetById(id));
+        }
+
+        public async Task<bool> Remove(int id)
+        {
+            await _reviewRepository.Remove(await _reviewRepository.GetById(id));
+            return true;
         }
     }
 }

@@ -15,8 +15,6 @@ namespace MovieManager.Domain.Interfaces
         IQueryable<TEntity> GetAll();
         Task Update(TEntity entity);
         Task Remove(TEntity entity);
-        Task UploadImage(Image image, TEntity entity);
-        Task DeleteImage(string imageName);
         Task<IEnumerable<TEntity>> Search(Expression<Func<TEntity, bool>> predicate);
         Task<int> SaveChanges();
     }

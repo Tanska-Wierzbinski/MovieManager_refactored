@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,9 +16,10 @@ namespace MovieManager.Infrastructure.Repositories
 {
     public class ActorRepository : Repository<Actor>, IActorRepository
     {
-        public ActorRepository(MovieManagerContext context, IWebHostEnvironment hostEnvironment) : base(context, hostEnvironment)
+        private readonly IWebHostEnvironment _hostEnvironment;
+        public ActorRepository(MovieManagerContext context, IWebHostEnvironment hostEnvironment) : base(context)
         {
-
+            _hostEnvironment = hostEnvironment;
         }
 
         public override async Task<Actor> GetById(int id)
@@ -34,17 +37,18 @@ namespace MovieManager.Infrastructure.Repositories
                             .Include(a => a.Grades);
         }
 
-        public override async Task UploadImage(Image image, Actor actor)
+        public async Task UploadImage(IFormFile imageFile, Actor actor)
         {
-            if (image != null)
+            if (imageFile != null)
             {
                 if (actor != null)
                 {
                     string wwwRothPath = _hostEnvironment.WebRootPath;
-                    string fileName = Path.GetFileNameWithoutExtension(image.ImageFile.FileName);
-                    string extension = Path.GetExtension(image.ImageFile.FileName);
+                    string fileName = Path.GetFileNameWithoutExtension(imageFile.FileName);
+                    string extension = Path.GetExtension(imageFile.FileName);
 
                     fileName = fileName + DateTime.Now.ToString("yyMMddss") + extension;
+                    Image image = new Image();
                     image.Name = fileName;
 
                     string path = Path.Combine(wwwRothPath + "/Image/", fileName);
@@ -72,5 +76,20 @@ namespace MovieManager.Infrastructure.Repositories
             }
         }
 
+        public async Task DeleteImage(string imageName)
+        {
+            var result = await Db.Images.SingleOrDefaultAsync(c => c.Name == imageName);
+
+            if (result != null)
+            {
+                var imagePath = Path.Combine(_hostEnvironment.WebRootPath, "Image", result.Name);
+                if (System.IO.File.Exists(imagePath))
+                {
+                    System.IO.File.Delete(imagePath);
+                }
+                Db.Images.Remove(result);
+                await Db.SaveChangesAsync();
+            }
+        }
     }
 }

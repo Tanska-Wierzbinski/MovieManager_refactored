@@ -12,12 +12,12 @@ namespace MovieManager.Application.Interfaces
     {
         Task<ActorIndexDto> GetAllForIndex(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 5);
         Task<ActorDetailsDto> GetDetails(int id);
-        Task<ActorAddDto> AddGet(); 
+        ActorAddDto AddGet(); 
         Task AddPost(ActorAddDto actor);
         Task<ActorEditDto> EditGet(int id);
         Task EditPost(ActorEditDto actor);
         Task AddGrade(GradeAddDto grade);
-        Task<ActorDto> GetById();
+        Task<ActorDto> GetById(int id);
         Task<bool> Remove(int id);
     }
 }
