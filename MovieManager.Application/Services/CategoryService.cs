@@ -44,6 +44,11 @@ namespace MovieManager.Application.Services
             await _categoryRepository.Update(_mapper.Map<Category>(category));
         }
 
+        public IQueryable<CategoryDto> GetAllForIndex()
+        {
+            return _categoryRepository.GetAll().ProjectTo<CategoryDto>(_mapper.ConfigurationProvider);
+        }
+
         public async Task<CategoryDto> GetById(int id)
         {
             return _mapper.Map<CategoryDto>(await _categoryRepository.GetById(id));

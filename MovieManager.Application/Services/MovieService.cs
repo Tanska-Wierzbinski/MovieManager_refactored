@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using MovieManager.Application.DTOs.Actor;
 using MovieManager.Application.DTOs.Category;
+using MovieManager.Application.DTOs.Home;
 using MovieManager.Application.DTOs.Movie;
 using MovieManager.Application.Interfaces;
 using MovieManager.Domain.Interfaces;
@@ -143,6 +145,31 @@ namespace MovieManager.Application.Services
         {
             await _movieRepository.Remove(await _movieRepository.GetById(id));
             return true;
+        }
+
+        public IndexDto GetForHome()
+        {
+            return new IndexDto
+            {
+                TopMovies = _movieRepository.GetAll().Where(m => m.Reviews.Any())
+                                                     .OrderByDescending(m => m.Reviews.Average(m => m.Grade))
+                                                     .Take(3).ProjectTo<MovieDto>(_mapper.ConfigurationProvider),
+                NewMovies = _movieRepository.GetAll().OrderByDescending(m => m.ReleaseDate)
+                                                     .Take(3).ProjectTo<MovieDto>(_mapper.ConfigurationProvider)
+            };
+        }
+        public SearchDto GetForSearch(string searchString)
+        {
+            return new SearchDto()
+            {
+                Movies = _movieRepository.GetAll().Where(m => m.Name.ToLower()
+                                                  .Contains(searchString.ToLower()))
+                                                  .ProjectTo<MovieDto>(_mapper.ConfigurationProvider),
+                Actors = _actorRepository.GetAll().Where(m => m.Name.ToLower()
+                                                  .Contains(searchString.ToLower()))
+                                                  .ProjectTo<ActorDto>(_mapper.ConfigurationProvider)
+
+            };
         }
     }
 }
