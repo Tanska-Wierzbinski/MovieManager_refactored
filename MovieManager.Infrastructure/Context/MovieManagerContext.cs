@@ -13,6 +13,9 @@ namespace MovieManager.Infrastructure.Context
         public DbSet<Actor> Actors { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<Grade> Grades { get; set; }
+        public DbSet<MovieActor> MovieActors { get; set; }
+        public DbSet<MovieCategory> MovieCategories { get; set; }
         public DbSet<Image> Images { get; set; }
 
         public MovieManagerContext(DbContextOptions<MovieManagerContext> options)

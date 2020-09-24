@@ -49,13 +49,13 @@ namespace MovieManager.Application.Services
             return _mapper.Map<CategoryDto>(await _categoryRepository.GetById(id));
         }
 
-        public async Task<CategoryDetailsDto> GetMoviesByCategory(int id)
+        public CategoryDetailsDto GetMoviesByCategory(int id)
         {
             return new CategoryDetailsDto()
             {
                 Id = id,
                 Name = _categoryRepository.GetById(id).Result.Name,
-                Movies = _movieCategoryRepository.GetAll().Where(mc => mc.CategoryId == id).Select(mc=>mc.Movie).ProjectTo<MovieDto>(_mapper.ConfigurationProvider).ToList()
+                Movies = _movieCategoryRepository.GetMoviesByCategory(id).ProjectTo<MovieDto>(_mapper.ConfigurationProvider).ToList()
             };
         }
 

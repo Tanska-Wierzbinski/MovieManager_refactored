@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures.Buffers;
 using MovieManager.Application.DTOs;
@@ -63,11 +64,11 @@ namespace MovieManager.Application.Services
 
         public async Task<ActorEditDto> EditGet(int id)
         {
-            var result = _mapper.Map<ActorEditDto>(await _actorRepository.GetById(id));
+            //var result = _mapper.Map<ActorEditDto>(await _actorRepository.GetById(id));
             //result.Movies = _movieRepository.GetAll().Select(m => new SelectListItem { Text = m.Name, Value = m.Id.ToString() }).ToList();
             //result.MovieIds = _movieActorRepository.GetAll().Where(ma=>ma.ActorId == id).Select(ma=>ma.MovieId).ToArray();
 
-            return result;
+            return _mapper.Map<ActorEditDto>(await _actorRepository.GetById(id));
         }
 
         public async Task EditPost(ActorEditDto actor)
@@ -86,11 +87,11 @@ namespace MovieManager.Application.Services
             await _actorRepository.Update(editedActor);
         }
 
-        public async Task<ActorIndexDto> GetAllForIndex(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 5)
+        public ActorIndexDto GetAllForIndex(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 5)
         {
             ActorIndexDto actorsForIndex = new ActorIndexDto()
             {
-                Actors = _mapper.ProjectTo<ActorDto>(_actorRepository.GetAll()).AsEnumerable(),
+                Actors = _actorRepository.GetAll().ProjectTo<ActorDto>(_mapper.ConfigurationProvider).AsEnumerable(),
                 GradeMin = gradeMin,
                 GradeMax = gradeMax == 0 ? gradeMin : gradeMax,
                 YearMax = yearMax,
@@ -103,6 +104,7 @@ namespace MovieManager.Application.Services
             };
             Filter(actorsForIndex);
             Sort(sortOrder, actorsForIndex.Actors);             ////////   DODAC  STRONNICOWANIE
+            actorsForIndex.Actors = PaginatedList<ActorDto>.Create(actorsForIndex.Actors.AsQueryable(), pageNumber ?? 1, pageSize);
 
             return actorsForIndex;
         }

@@ -10,7 +10,7 @@ namespace MovieManager.Application.Interfaces
 {
     public interface IActorService
     {
-        Task<ActorIndexDto> GetAllForIndex(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 5);
+        ActorIndexDto GetAllForIndex(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 5);
         Task<ActorDetailsDto> GetDetails(int id);
         ActorAddDto AddGet(); 
         Task AddPost(ActorAddDto actor);

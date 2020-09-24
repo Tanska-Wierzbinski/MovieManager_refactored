@@ -1,7 +1,14 @@
-﻿using MovieManager.Application.DTOs.Movie;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using MovieManager.Application.DTOs.Category;
+using MovieManager.Application.DTOs.Movie;
 using MovieManager.Application.Interfaces;
+using MovieManager.Domain.Interfaces;
+using MovieManager.Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,44 +16,133 @@ namespace MovieManager.Application.Services
 {
     public class MovieService : IMovieService
     {
-        public Task<MovieAddDto> AddGet()
+        private readonly IActorRepository _actorRepository;
+        private readonly IMovieRepository _movieRepository;
+        private readonly ICategoryRepository _categoryRepository;
+        private readonly IMovieActorRepository _movieActorRepository;
+        private readonly IMovieCategoryRepository _movieCategoryRepository;
+        private readonly IMapper _mapper;
+
+        public MovieService(IActorRepository actorRepository, IMovieRepository movieRepository, ICategoryRepository categoryRepository, IMovieActorRepository movieActorRepository, IMovieCategoryRepository movieCategoryRepository, IMapper mapper)
         {
-            throw new NotImplementedException();
+            _actorRepository = actorRepository;
+            _movieRepository = movieRepository;
+            _categoryRepository = categoryRepository;
+            _movieActorRepository = movieActorRepository;
+            _movieCategoryRepository = movieCategoryRepository;
+            _mapper = mapper;
+        }
+        public MovieAddDto AddGet()
+        {
+            return new MovieAddDto()
+            {
+                Actors = _actorRepository.GetAll().Select(a => new SelectListItem { Text = a.Name + " " + a.LastName, Value = a.Id.ToString() }).ToList(),
+                Categories = _categoryRepository.GetAll().Select(c => new SelectListItem { Text = c.Name, Value = c.Id.ToString() }).ToList()
+            };
         }
 
-        public Task AddPost(MovieAddDto actor)
+        public async Task AddPost(MovieAddDto movie)
         {
-            throw new NotImplementedException();
+            var newMovie = _mapper.Map<Movie>(movie);
+            await _movieRepository.UploadImage(movie.ImageFile, newMovie);
+            await _movieRepository.Add(newMovie);
         }
 
-        public Task<MovieEditDto> EditGet(int id)
+        public async Task<MovieEditDto> EditGet(int id)
         {
-            throw new NotImplementedException();
+            return _mapper.Map<MovieEditDto>(await _movieRepository.GetById(id));
         }
 
-        public Task EditPost(MovieEditDto actor)
+        public async Task EditPost(MovieEditDto movie)
         {
-            throw new NotImplementedException();
+            var editedMovie = _mapper.Map<Movie>(movie);
+            await _movieRepository.UploadImage(movie.ImageFile, editedMovie);
+
+            await _movieRepository.Update(editedMovie);
         }
 
-        public Task<MovieIndexDto> GetAllForIndex()
+        public MovieIndexDto GetAllForIndex(int yearMin, int yearMax, int gradeMin, int gradeMax, int[] categories, string sortOrder, int? pageNumber, int pageSize = 5)
         {
-            throw new NotImplementedException();
+            MovieIndexDto moviesForIndex = new MovieIndexDto()
+            {
+                Movies = _movieRepository.GetAll().ProjectTo<MovieDto>(_mapper.ConfigurationProvider).AsEnumerable(),
+                Categories = _categoryRepository.GetAll().ProjectTo<CategoryDto>(_mapper.ConfigurationProvider).AsEnumerable(),
+                GradeMin = gradeMin,
+                GradeMax = gradeMax == 0 ? gradeMin : gradeMax,
+                YearMax = yearMax,
+                YearMin = yearMin == 0 ? yearMax : yearMin,
+                CategoriesIds = categories,
+                SortOrder = sortOrder,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+            Filter(moviesForIndex);
+            Sort(sortOrder, moviesForIndex.Movies);
+            moviesForIndex.Movies = PaginatedList<MovieDto>.Create(moviesForIndex.Movies.AsQueryable(), pageNumber ?? 1, pageSize);
+
+            return moviesForIndex;
         }
 
-        public Task<MovieDto> GetById()
+        private void Filter(MovieIndexDto moviesForIndex)
         {
-            throw new NotImplementedException();
+            if (moviesForIndex.CategoriesIds.Length != 0)
+            {
+                foreach (var category in moviesForIndex.CategoriesIds)
+                {
+                    moviesForIndex.Movies = moviesForIndex.Movies.Intersect(_movieCategoryRepository.GetMoviesByCategory(category).ProjectTo<MovieDto>(_mapper.ConfigurationProvider));
+                }
+            }
+            moviesForIndex.Movies = moviesForIndex.Movies.Where(m => m.ReleaseDate.Year >= moviesForIndex.YearMin && m.ReleaseDate.Year <= moviesForIndex.YearMax)
+                                                         .Where(m => m.Reviews.Any())
+                                                         .Where(m => m.Reviews.Average(m => m.Grade) >= moviesForIndex.GradeMin && m.Reviews.Average(m => m.Grade) < moviesForIndex.GradeMax + 1);
+
         }
 
-        public Task<MovieDetailsDto> GetDetails(int id)
+        private void Sort(string sortOrder, IEnumerable<MovieDto> movies)
         {
-            throw new NotImplementedException();
+            switch (sortOrder)
+            {
+                case "nameDesc":
+                    movies = movies.OrderByDescending(m => m.Name);
+                    break;
+                case "yearDesc":
+                    movies = movies.OrderByDescending(m => m.ReleaseDate);
+                    break;
+                case "year":
+                    movies = movies.OrderBy(m => m.ReleaseDate);
+                    break;
+                case "gradeDesc":
+                    movies = movies.Where(m => m.Reviews.Any()).OrderByDescending(m => m.Reviews.Average(k => k.Grade)).Union(movies);
+                    break;
+                case "grade":
+                    movies = movies.Where(m => m.Reviews.Any()).OrderBy(m => m.Reviews.Average(k => k.Grade)).Union(movies);
+                    break;
+                case "quantityGradeDesc":
+                    movies = movies.Where(m => m.Reviews.Any()).OrderByDescending(m => m.Reviews.Count()).Union(movies);
+                    break;
+                case "quantityGrade":
+                    movies = movies.Where(m => m.Reviews.Any()).OrderBy(m => m.Reviews.Count()).Union(movies);
+                    break;
+                default:
+                    movies = movies.OrderBy(m => m.Name);
+                    break;
+            }
         }
 
-        public Task<bool> Remove(int id)
+        public async Task<MovieDto> GetById(int id)
         {
-            throw new NotImplementedException();
+            return _mapper.Map<MovieDto>(await _movieRepository.GetById(id));
+        }
+
+        public async Task<MovieDetailsDto> GetDetails(int id)
+        {
+            return _mapper.Map<MovieDetailsDto>(await _movieRepository.GetById(id));
+        }
+
+        public async Task<bool> Remove(int id)
+        {
+            await _movieRepository.Remove(await _movieRepository.GetById(id));
+            return true;
         }
     }
 }

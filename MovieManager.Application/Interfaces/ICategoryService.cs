@@ -10,7 +10,7 @@ namespace MovieManager.Application.Interfaces
 {
     public interface ICategoryService
     {
-        Task<CategoryDetailsDto> GetMoviesByCategory(int id);
+        CategoryDetailsDto GetMoviesByCategory(int id);
         Task AddPost(CategoryAddDto category);
         Task<CategoryDto> EditGet(int id);
         Task EditPost(CategoryDto category);
