@@ -13,7 +13,7 @@
     <div class="col-md-4">
         <form asp-action="Edit" id="form" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="ActorId" />
+            <input type="hidden" asp-for="Id" />
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
                 <input asp-for="Name" class="form-control" />
@@ -56,7 +56,7 @@
                 <div class="custom-file">
                     <label for="filename" class="btn btn-outline-warning">Choose file</label>
                     <label class="label_file"></label>
-                    <input type="file" id="filename" asp-for="Image.ImageFile" accept="image/*" style="opacity:0" class="custom-file-input">
+                    <input type="file" id="filename" asp-for="ImageFile" accept="image/*" style="opacity:0" class="custom-file-input">
                 </div>
 
                 <script>
