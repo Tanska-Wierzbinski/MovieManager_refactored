@@ -12,8 +12,8 @@ using MovieManager.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MovieManager.Application.Configuration;
 using AutoMapper;
+using MovieManager.Application.Configuration;
 using MovieManager.Infrastructure.Context;
 
 namespace MovieManager

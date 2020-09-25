@@ -42,6 +42,7 @@ namespace MovieManager.Application.DTOs.Actor
 
     public enum GenderDto
     {
-        Male,Female
+        Male=2,
+        Female=0
     }
 }

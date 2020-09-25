@@ -20,6 +20,7 @@ namespace MovieManager.Application.Configuration
             services.AddScoped<IMovieRepository, MovieRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IReviewRepository, ReviewRepository>();
+            services.AddScoped<IGradeRepository, GradeRepository>();
             services.AddScoped<IMovieActorRepository, MovieActorRepository>();
             services.AddScoped<IMovieCategoryRepository, MovieCategoryRepository>();
 

@@ -149,13 +149,13 @@ namespace MovieManager.Application.Services
 
         public IndexDto GetForHome()
         {
-            return new IndexDto
+            return new IndexDto()
             {
                 TopMovies = _movieRepository.GetAll().Where(m => m.Reviews.Any())
-                                                     .OrderByDescending(m => m.Reviews.Average(m => m.Grade))
-                                                     .Take(3).ProjectTo<MovieDto>(_mapper.ConfigurationProvider),
-                NewMovies = _movieRepository.GetAll().OrderByDescending(m => m.ReleaseDate)
-                                                     .Take(3).ProjectTo<MovieDto>(_mapper.ConfigurationProvider)
+                                                     .OrderByDescending(m => m.Reviews.Average(m => m.Grade)).ProjectTo<MovieDto>(_mapper.ConfigurationProvider)
+                                                     .Take(3),
+                NewMovies = _movieRepository.GetAll().OrderByDescending(m => m.ReleaseDate).ProjectTo<MovieDto>(_mapper.ConfigurationProvider)
+                                                     .Take(3)
             };
         }
         public SearchDto GetForSearch(string searchString)

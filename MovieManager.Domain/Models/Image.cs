@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace MovieManager.Domain.Models
@@ -11,7 +12,7 @@ namespace MovieManager.Domain.Models
 
         public string Name { get; set; }
 
-       // [NotMapped]
+        [NotMapped]
         public IFormFile ImageFile { get; set; }
     }
 }
