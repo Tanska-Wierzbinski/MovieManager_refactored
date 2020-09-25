@@ -17,10 +17,16 @@ namespace MovieManager.Application.Configuration
     {
         public AutomapperConfig()
         {
-            CreateMap<Actor, ActorAddDto>().ForMember(a=>a.ImageFile, src=>src.Ignore()).ReverseMap();
-            CreateMap<Actor, ActorDto>().ReverseMap();
-            CreateMap<Actor, ActorIndexDto>().ReverseMap();
+            CreateMap<Actor, ActorAddDto>()
+                .ForMember(a=>a.ImageFile, src=>src.Ignore()).ReverseMap();
+            CreateMap<Actor, ActorDto>()
+                .ForMember(a => a.AverageGrade, src => src.MapFrom(src => src.GetAverageGrade()))
+                .ForMember(a => a.Age, src => src.MapFrom(src=>src.GetCurrentAge())).ReverseMap();
+            CreateMap<Actor, ActorIndexDto>()
+                .ReverseMap();
             CreateMap<Actor, ActorDetailsDto>()
+                .ForMember(a => a.Age, src => src.MapFrom(src => src.GetCurrentAge()))
+                .ForMember(a => a.AverageGrade, src => src.MapFrom(src => src.GetAverageGrade()))
                 .ForMember(a => a.Movies, src => src.MapFrom(src => src.MovieActors.Select(src => src.Movie)))
                 .ReverseMap();
             CreateMap<Actor, ActorEditDto>()
@@ -31,12 +37,15 @@ namespace MovieManager.Application.Configuration
             CreateMap<Review, ReviewAddDto>().ReverseMap();
             CreateMap<Review, ReviewDto>().ReverseMap();
 
-            CreateMap<Movie, MovieDto>().ForMember(m=>m.Id, src=>src.MapFrom(src => src.Id)).ReverseMap();
+            CreateMap<Movie, MovieDto>()
+                .ForMember(a => a.AverageGrade, src => src.MapFrom(src => src.GetAverageGrade()))
+                .ForMember(m=>m.Id, src=>src.MapFrom(src => src.Id)).ReverseMap();
             CreateMap<Movie, MovieAddDto>()
                 .ForMember(m => m.ImageFile, src => src.Ignore())
                 .ReverseMap();
             CreateMap<Movie, MovieIndexDto>().ReverseMap();
             CreateMap<Movie, MovieDetailsDto>()
+                .ForMember(a => a.AverageGrade, src => src.MapFrom(src => src.GetAverageGrade()))
                 .ForMember(m=>m.Actors, src=>src.MapFrom(src=>src.MovieActors.Select(src=>src.Actor)))
                 .ForMember(m=>m.Categories,src=>src.MapFrom(src=>src.MovieCategories.Select(src=>src.Category)))
                 .ReverseMap();

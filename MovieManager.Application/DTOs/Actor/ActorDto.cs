@@ -16,6 +16,8 @@ namespace MovieManager.Application.DTOs.Actor
         }
         public DateTime? DeathDate { get; set; }
         public DateTime BornDate { get; set; }
+        public int Age { get; set; }
+        public double? AverageGrade { get; set; }
         public GenderDto Gender { get; set; }
         public string ImageName { get; set; }
         public string Country { get; set; }

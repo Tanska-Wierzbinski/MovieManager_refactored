@@ -12,6 +12,7 @@ namespace MovieManager.Application.DTOs.Movie
         public string Director { get; set; }
         public DateTime ReleaseDate { get; set; }
         public string ImageName { get; set; }
+        public double? AverageGrade { get; set; }
 
         public IList<ReviewDto> Reviews { get; set; }
     }
