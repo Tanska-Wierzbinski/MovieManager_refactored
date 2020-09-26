@@ -93,8 +93,8 @@ namespace MovieManager.Application.Services
             {
                 Actors = _actorRepository.GetAll().ProjectTo<ActorDto>(_mapper.ConfigurationProvider).AsEnumerable(),
                 GradeMin = gradeMin,
-                GradeMax = gradeMax == 0 ? gradeMin : gradeMax,
-                YearMax = yearMax,
+                GradeMax = gradeMax == 0 ? 10 : gradeMax,
+                YearMax = yearMax == 0 ? 2100 : yearMax ,
                 YearMin = yearMin == 0 ? yearMax : yearMin,
                 Gender = gender,
                 Countries = countries,
@@ -102,14 +102,14 @@ namespace MovieManager.Application.Services
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            Filter(actorsForIndex);
-            Sort(sortOrder, actorsForIndex.Actors);             ////////   DODAC  STRONNICOWANIE
-            actorsForIndex.Actors = PaginatedList<ActorDto>.Create(actorsForIndex.Actors.AsQueryable(), pageNumber ?? 1, pageSize);
+            actorsForIndex = Filter(actorsForIndex);
+            actorsForIndex.Actors = Sort(sortOrder, actorsForIndex.Actors);            
+            actorsForIndex.PaginatedActors = PaginatedList<ActorDto>.Create(actorsForIndex.Actors.AsQueryable(), pageNumber ?? 1, pageSize);
 
             return actorsForIndex;
         }
 
-        private void Filter(ActorIndexDto actorsForIndex)
+        private ActorIndexDto Filter( ActorIndexDto actorsForIndex)
         {
             if (actorsForIndex.Countries.Length != 0)
             {
@@ -129,9 +129,11 @@ namespace MovieManager.Application.Services
                                                                                             .Where(m => m.Grades
                                                                                                 .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
                                                                                                     .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1);
+            return actorsForIndex;
+        
         }
 
-        private void Sort(string sortOrder, IEnumerable<ActorDto> actors)
+        private IEnumerable<ActorDto> Sort(string sortOrder, IEnumerable<ActorDto> actors)
         {
             switch (sortOrder)
             {
@@ -160,6 +162,7 @@ namespace MovieManager.Application.Services
                     actors = actors.OrderBy(m => m.LastName);
                     break;
             }
+            return actors;
         }
         public async Task<ActorDto> GetById(int id)
         {

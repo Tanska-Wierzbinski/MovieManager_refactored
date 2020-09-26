@@ -14,13 +14,13 @@
 <div>
     <h4>
         @{
-            if (Model.AverageGrade != null)
+            if (Model.AverageGrade.HasValue)
             {
-                if (Model.AverageGrade < 5)
+                if (Model.AverageGrade.Value < 5)
                 {
                     <i class="far fa-star"></i>
                 }
-                else if (Model.AverageGrade < 7)
+                else if (Model.AverageGrade.Value < 7)
                 {
                     <i class="fas fa-star-half-alt"></i>
                 }

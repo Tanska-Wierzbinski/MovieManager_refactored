@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
 using MovieManager.Infrastructure.Context;
@@ -19,7 +20,11 @@ namespace MovieManager.Infrastructure.Repositories
 
         public IQueryable<Movie> GetMoviesByCategory(int id)
         {
-            return Db.MovieCategories.Where(mc => mc.CategoryId == id).Select(mc => mc.Movie);
+            return Db.MovieCategories.Include(m => m.Movie)
+                                     .ThenInclude(r => r.Reviews)
+                                     .Include(m => m.Category)
+                                     .Where(mc => mc.CategoryId == id)
+                                     .Select(mc => mc.Movie);
         }
     }
 }

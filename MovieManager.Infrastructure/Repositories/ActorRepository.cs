@@ -24,7 +24,7 @@ namespace MovieManager.Infrastructure.Repositories
 
         public override async Task<Actor> GetById(int id)
         {
-            return await Db.Actors.AsNoTracking()
+            return await Db.Actors//.AsNoTracking()
                                   .Include(m => m.MovieActors)
                                   .ThenInclude(m => m.Movie)
                                   .Include(m => m.Grades)
@@ -32,7 +32,7 @@ namespace MovieManager.Infrastructure.Repositories
         }
         public override IQueryable<Actor> GetAll()
         {
-            return Db.Actors.AsNoTracking()
+            return Db.Actors//.AsNoTracking()
                             .OrderBy(a => a.LastName)
                             .Include(a => a.Grades);
         }

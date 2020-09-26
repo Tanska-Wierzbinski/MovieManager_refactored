@@ -20,7 +20,7 @@ namespace MovieManager.Controllers
         }
 
         // GET: ActorController
-        public ActionResult Index(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 5)
+        public ActionResult Index(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 30)
         {
 
             return View(_actorService.GetAllForIndex(gender, yearMin, yearMax, gradeMin, gradeMax, countries, sortOrder, pageNumber, pageSize));

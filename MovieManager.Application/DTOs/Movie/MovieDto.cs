@@ -1,4 +1,5 @@
-﻿using MovieManager.Application.DTOs.Review;
+﻿using MovieManager.Application.DTOs.Category;
+using MovieManager.Application.DTOs.Review;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,6 +15,7 @@ namespace MovieManager.Application.DTOs.Movie
         public string ImageName { get; set; }
         public double? AverageGrade { get; set; }
 
+        public IList<CategoryDto> Categories { get; set; }
         public IList<ReviewDto> Reviews { get; set; }
     }
 }

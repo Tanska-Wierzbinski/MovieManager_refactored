@@ -22,8 +22,8 @@ namespace MovieManager.Application.Configuration
             CreateMap<Actor, ActorDto>()
                 .ForMember(a => a.AverageGrade, src => src.MapFrom(src => src.GetAverageGrade()))
                 .ForMember(a => a.Age, src => src.MapFrom(src=>src.GetCurrentAge())).ReverseMap();
-            CreateMap<Actor, ActorIndexDto>()
-                .ReverseMap();
+            //CreateMap<Actor, ActorIndexDto>()
+                //.ReverseMap();
             CreateMap<Actor, ActorDetailsDto>()
                 .ForMember(a => a.Age, src => src.MapFrom(src => src.GetCurrentAge()))
                 .ForMember(a => a.AverageGrade, src => src.MapFrom(src => src.GetAverageGrade()))
@@ -38,12 +38,13 @@ namespace MovieManager.Application.Configuration
             CreateMap<Review, ReviewDto>().ReverseMap();
 
             CreateMap<Movie, MovieDto>()
+                .ForMember(a => a.Categories, src => src.MapFrom(src => src.MovieCategories.Select(c=>c.Category)))
                 .ForMember(a => a.AverageGrade, src => src.MapFrom(src => src.GetAverageGrade()))
                 .ForMember(m=>m.Id, src=>src.MapFrom(src => src.Id)).ReverseMap();
             CreateMap<Movie, MovieAddDto>()
                 .ForMember(m => m.ImageFile, src => src.Ignore())
                 .ReverseMap();
-            CreateMap<Movie, MovieIndexDto>().ReverseMap();
+            //CreateMap<Movie, MovieIndexDto>().ReverseMap();
             CreateMap<Movie, MovieDetailsDto>()
                 .ForMember(a => a.AverageGrade, src => src.MapFrom(src => src.GetAverageGrade()))
                 .ForMember(m=>m.Actors, src=>src.MapFrom(src=>src.MovieActors.Select(src=>src.Actor)))

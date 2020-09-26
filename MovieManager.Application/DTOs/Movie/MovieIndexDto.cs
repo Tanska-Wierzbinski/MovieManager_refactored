@@ -17,6 +17,7 @@ namespace MovieManager.Application.DTOs.Movie
         public int PageSize { get; set; }
 
         public IEnumerable<MovieDto> Movies { get; set; }
+        public PaginatedList<MovieDto> PaginatedMovies { get; set; }
         public IEnumerable<CategoryDto> Categories { get; set; }
     }
 }

@@ -18,6 +18,10 @@ namespace MovieManager.Domain.Models
         public IList<MovieActor> MovieActors { get; set; }
         public IList<Grade> Grades { get; set; }
 
+        public Actor()
+        {
+            Grades = new List<Grade>();
+        }
         public int GetCurrentAge()
         {
             int Age;

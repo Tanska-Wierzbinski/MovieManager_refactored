@@ -19,6 +19,10 @@ namespace MovieManager.Domain.Models
         public IList<MovieCategory> MovieCategories { get; set; }
         public IList<MovieActor> MovieActors { get; set; }
 
+        public Movie()
+        {
+            Reviews = new List<Review>();
+        }
         public double? GetAverageGrade()
         {
             if (Reviews.Any())
