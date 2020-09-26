@@ -10,6 +10,7 @@ using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -68,7 +69,7 @@ namespace MovieManager.Application.Services
             MovieIndexDto moviesForIndex = new MovieIndexDto()
             {
                 Movies = _movieRepository.GetAll().ProjectTo<MovieDto>(_mapper.ConfigurationProvider).AsEnumerable(),
-                Categories = _categoryRepository.GetAll().ProjectTo<CategoryDto>(_mapper.ConfigurationProvider).AsEnumerable(),
+                Categories = _categoryRepository.GetAll().ProjectTo<CategoryDto>(_mapper.ConfigurationProvider).ToList(),//.AsEnumerable(),
                 GradeMin = gradeMin,
                 GradeMax = gradeMax == 0 ? 10 : gradeMax,
                 YearMax = yearMax == 0 ? 2100 : yearMax,
@@ -78,29 +79,50 @@ namespace MovieManager.Application.Services
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            moviesForIndex = Filter(moviesForIndex);
-            moviesForIndex.Movies = Sort(sortOrder, moviesForIndex.Movies);
+            //moviesForIndex = 
+                Filter(moviesForIndex);
+            //moviesForIndex.Movies = Sort(sortOrder, moviesForIndex.Movies);
             moviesForIndex.PaginatedMovies = PaginatedList<MovieDto>.Create(moviesForIndex.Movies.AsQueryable(), pageNumber ?? 1, pageSize);
 
             return moviesForIndex;
         }
 
-        private MovieIndexDto Filter(MovieIndexDto moviesForIndex)
+
+
+        
+
+        private class MovieDtoComparer : IEqualityComparer<MovieDto>
+        {
+            public bool Equals([AllowNull]MovieDto first, [AllowNull]MovieDto second)
+            {
+                if (first.Id == second.Id)
+                    return true;
+
+                return false;
+            }
+            public int GetHashCode([DisallowNull]MovieDto obj)
+            {
+                return obj.Id.GetHashCode();
+            }
+        }
+
+        private void Filter(MovieIndexDto moviesForIndex)
         {
             if (moviesForIndex.CategoriesIds.Length != 0)
             {
                 foreach (var category in moviesForIndex.CategoriesIds)
                 {
-                    var m = _movieCategoryRepository.GetMoviesByCategory(category)
-                                                    .ProjectTo<MovieDto>(_mapper.ConfigurationProvider)
-                                                    .AsEnumerable();
-                    moviesForIndex.Movies = moviesForIndex.Movies.Intersect(m);
+                    //var mg = _movieRepository.GetAll().ProjectTo<MovieDto>(_mapper.ConfigurationProvider).AsEnumerable();
+                    var moviesWithCategory = _movieCategoryRepository.GetMoviesByCategory(category).ProjectTo<MovieDto>(_mapper.ConfigurationProvider).AsEnumerable();
+                    //var m = _movieRepository.GetForCategory(category);
+                    //var pom = mg.Intersect(m, new MovieDtoComparer());//.ToList();
+                    moviesForIndex.Movies = moviesForIndex.Movies.Intersect(moviesWithCategory, new MovieDtoComparer());
                 }
             }
             moviesForIndex.Movies = moviesForIndex.Movies.Where(m => m.ReleaseDate.Year >= moviesForIndex.YearMin && m.ReleaseDate.Year <= moviesForIndex.YearMax)
                                                          .Where(m => m.Reviews.Any())
                                                          .Where(m => m.Reviews.Average(m => m.Grade) >= moviesForIndex.GradeMin && m.Reviews.Average(m => m.Grade) < moviesForIndex.GradeMax + 1);
-            return moviesForIndex;
+            //return moviesForIndex;
         }
 
         private IEnumerable<MovieDto> Sort(string sortOrder, IEnumerable<MovieDto> movies)

@@ -20,11 +20,17 @@ namespace MovieManager.Infrastructure.Repositories
 
         public IQueryable<Movie> GetMoviesByCategory(int id)
         {
-            return Db.MovieCategories.Include(m => m.Movie)
-                                     .ThenInclude(r => r.Reviews)
-                                     .Include(m => m.Category)
-                                     .Where(mc => mc.CategoryId == id)
-                                     .Select(mc => mc.Movie);
+            //return Db.MovieCategories.Include(m => m.Movie)
+            //                         .ThenInclude(r => r.Reviews)
+            //                         .Include(m => m.Category)
+            //                         .Where(mc => mc.CategoryId == id)
+            //                         .Select(mc => mc.Movie);
+
+            var Categories = Db.Categories.Include(c => c.MovieCategories).ThenInclude(m => m.Movie).ThenInclude(r => r.Reviews);
+            Category Category = Categories.Where(c => c.Id == id).Single();
+            var Movies = Category.MovieCategories.Select(m => m.Movie).AsQueryable();
+
+            return Movies;
         }
     }
 }

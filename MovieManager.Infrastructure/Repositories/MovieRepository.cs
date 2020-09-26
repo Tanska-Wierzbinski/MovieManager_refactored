@@ -36,11 +36,12 @@ namespace MovieManager.Infrastructure.Repositories
 
         public override IQueryable<Movie> GetAll()
         {
-            return Db.Movies.Include(m => m.MovieCategories)
+            return Db.Movies.Include(m => m.Reviews).Include(m => m.MovieCategories)
                             .ThenInclude(m => m.Category)
-                            .Include(m => m.Reviews)
                             .AsNoTracking();
         }
+        
+
         public async Task UploadImage(IFormFile imageFile, Movie movie)
         {
             if (imageFile != null)

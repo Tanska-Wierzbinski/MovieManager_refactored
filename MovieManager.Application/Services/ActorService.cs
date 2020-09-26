@@ -10,6 +10,7 @@ using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -102,20 +103,38 @@ namespace MovieManager.Application.Services
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            actorsForIndex = Filter(actorsForIndex);
+            //actorsForIndex = 
+                Filter(actorsForIndex);
             actorsForIndex.Actors = Sort(sortOrder, actorsForIndex.Actors);            
             actorsForIndex.PaginatedActors = PaginatedList<ActorDto>.Create(actorsForIndex.Actors.AsQueryable(), pageNumber ?? 1, pageSize);
 
             return actorsForIndex;
         }
 
-        private ActorIndexDto Filter( ActorIndexDto actorsForIndex)
+        private class ActorDtoComparer : IEqualityComparer<ActorDto>
+        {
+            public bool Equals([AllowNull]ActorDto first, [AllowNull]ActorDto second)
+            {
+                if (first.Country == second.Country)
+                    return true;
+
+                return false;
+            }
+
+            public int GetHashCode([DisallowNull] ActorDto obj)
+            {
+                return obj.Id.GetHashCode();
+            }
+        }
+
+        private void Filter(ActorIndexDto actorsForIndex)
         {
             if (actorsForIndex.Countries.Length != 0)
             {
                 foreach (var country in actorsForIndex.Countries)
                 {
-                    actorsForIndex.Actors = actorsForIndex.Actors.Intersect(actorsForIndex.Actors.Where(a => a.Country == country));
+                    //var pom = actorsForIndex.Actors.Intersect(actorsForIndex.Actors.Where(a => a.Country == country), new ActorDtoComparer());
+                    actorsForIndex.Actors = actorsForIndex.Actors.Intersect(actorsForIndex.Actors.Where(a => a.Country == country), new ActorDtoComparer());
                 }
             }
             actorsForIndex.Actors = actorsForIndex.Gender != null ? actorsForIndex.Actors.Where(m => m.Gender == actorsForIndex.Gender)
@@ -129,8 +148,8 @@ namespace MovieManager.Application.Services
                                                                                             .Where(m => m.Grades
                                                                                                 .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
                                                                                                     .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1);
-            return actorsForIndex;
-        
+            //return actorsForIndex;
+
         }
 
         private IEnumerable<ActorDto> Sort(string sortOrder, IEnumerable<ActorDto> actors)
