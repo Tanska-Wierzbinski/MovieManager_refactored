@@ -103,9 +103,8 @@ namespace MovieManager.Application.Services
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            //actorsForIndex = 
-                Filter(actorsForIndex);
-            actorsForIndex.Actors = Sort(sortOrder, actorsForIndex.Actors);            
+            Filter(actorsForIndex);
+            Sort(sortOrder, actorsForIndex.Actors);            
             actorsForIndex.PaginatedActors = PaginatedList<ActorDto>.Create(actorsForIndex.Actors.AsQueryable(), pageNumber ?? 1, pageSize);
 
             return actorsForIndex;
@@ -133,7 +132,6 @@ namespace MovieManager.Application.Services
             {
                 foreach (var country in actorsForIndex.Countries)
                 {
-                    //var pom = actorsForIndex.Actors.Intersect(actorsForIndex.Actors.Where(a => a.Country == country), new ActorDtoComparer());
                     actorsForIndex.Actors = actorsForIndex.Actors.Intersect(actorsForIndex.Actors.Where(a => a.Country == country), new ActorDtoComparer());
                 }
             }
@@ -152,7 +150,7 @@ namespace MovieManager.Application.Services
 
         }
 
-        private IEnumerable<ActorDto> Sort(string sortOrder, IEnumerable<ActorDto> actors)
+        private void Sort(string sortOrder, IEnumerable<ActorDto> actors)
         {
             switch (sortOrder)
             {
@@ -181,7 +179,6 @@ namespace MovieManager.Application.Services
                     actors = actors.OrderBy(m => m.LastName);
                     break;
             }
-            return actors;
         }
         public async Task<ActorDto> GetById(int id)
         {

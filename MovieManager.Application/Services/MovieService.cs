@@ -79,9 +79,8 @@ namespace MovieManager.Application.Services
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-            //moviesForIndex = 
-                Filter(moviesForIndex);
-            //moviesForIndex.Movies = Sort(sortOrder, moviesForIndex.Movies);
+            Filter(moviesForIndex);
+            Sort(sortOrder, moviesForIndex.Movies);
             moviesForIndex.PaginatedMovies = PaginatedList<MovieDto>.Create(moviesForIndex.Movies.AsQueryable(), pageNumber ?? 1, pageSize);
 
             return moviesForIndex;
@@ -112,20 +111,17 @@ namespace MovieManager.Application.Services
             {
                 foreach (var category in moviesForIndex.CategoriesIds)
                 {
-                    //var mg = _movieRepository.GetAll().ProjectTo<MovieDto>(_mapper.ConfigurationProvider).AsEnumerable();
                     var moviesWithCategory = _movieCategoryRepository.GetMoviesByCategory(category).ProjectTo<MovieDto>(_mapper.ConfigurationProvider).AsEnumerable();
-                    //var m = _movieRepository.GetForCategory(category);
-                    //var pom = mg.Intersect(m, new MovieDtoComparer());//.ToList();
                     moviesForIndex.Movies = moviesForIndex.Movies.Intersect(moviesWithCategory, new MovieDtoComparer());
                 }
             }
             moviesForIndex.Movies = moviesForIndex.Movies.Where(m => m.ReleaseDate.Year >= moviesForIndex.YearMin && m.ReleaseDate.Year <= moviesForIndex.YearMax)
                                                          .Where(m => m.Reviews.Any())
                                                          .Where(m => m.Reviews.Average(m => m.Grade) >= moviesForIndex.GradeMin && m.Reviews.Average(m => m.Grade) < moviesForIndex.GradeMax + 1);
-            //return moviesForIndex;
+      
         }
 
-        private IEnumerable<MovieDto> Sort(string sortOrder, IEnumerable<MovieDto> movies)
+        private void Sort(string sortOrder, IEnumerable<MovieDto> movies)
         {
             switch (sortOrder)
             {
@@ -154,7 +150,6 @@ namespace MovieManager.Application.Services
                     movies = movies.OrderBy(m => m.Name);
                     break;
             }
-            return movies;
         }
 
         public async Task<MovieDto> GetById(int id)

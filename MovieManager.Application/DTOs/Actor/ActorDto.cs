@@ -23,5 +23,7 @@ namespace MovieManager.Application.DTOs.Actor
         public string Country { get; set; }
         public IList<GradeDto> Grades { get; set; }
 
+        
+
     }
 }
