@@ -7,5 +7,6 @@ namespace MovieManager.Domain.Interfaces
 {
     public interface IMovieActorRepository : IRepository<MovieActor>
     {
+
     }
 }

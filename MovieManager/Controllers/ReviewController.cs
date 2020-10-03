@@ -40,9 +40,9 @@ namespace MovieManager.Controllers
         // POST: ReviewController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(ReviewAddDto newReview)
+        public async Task<ActionResult> Create(ReviewAddDto review, int id)
         {
-            await _reviewService.AddPost(newReview);
+            await _reviewService.AddPost(review);
             return RedirectToAction(nameof(Index));
         }
 

@@ -1,18 +1,18 @@
-﻿@model MovieManager.Application.DTOs.Movie.MovieAddDto
-
+﻿@model MovieManager.Application.DTOs.Movie.MovieEditDto
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Edit";
 }
 
-<h1>Adding new movie</h1>
+<h1>Editing movie</h1>
 
-<script src="~/lib/jquery/3.5.1/jquery.min.js"></script>
+@*<script src="~/lib/jquery/3.5.1/jquery.min.js"></script>*@
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
 
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create" enctype="multipart/form-data">
+        <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="Name" class="control-label"></label>
@@ -29,30 +29,40 @@
                 <input type="date" asp-for="ReleaseDate" class="form-control" />
                 <span asp-validation-for="ReleaseDate" class="text-danger"></span>
             </div>
+            <div class="form-group" id="deleteImage">
+                <label asp-for="@Model.ImageFile" class="control-label"></label>
+                @if (Model.ImageName != null)
+                {
+                    <img src="@("~/Image/" + Model.ImageName)" asp-append-version="true" style="width:350px; height:auto" />
+                    <p style="margin-bottom: 0.5cm"></p>
+                    <input type="button" class="btn btn-outline-dark" id="deleteImageBtn" value="Delete photo" />
+                }
+            </div>
 
+            <div class="form-group" id="addImage" style="display:none">
+                <div class="custom-file">
+                    <label for="filename" class="btn btn-outline-dark">Choose file</label>
+                    <label class="label_file"></label>
+                    <input type="file" id="filename" asp-for="ImageFile" accept="image/*" style="opacity:0" class="custom-file-input">
+                </div>
+
+                <script>
+                    $(".custom-file-input").on("change", function () {
+                        var fileName = $(this).val().split("\\").pop();
+                        $(this).siblings(".label_file").addClass("selected").html(fileName);
+                    });
+                </script>
+            </div>
+
+            <h6>Categories</h6>
             <div class="form-group" id="dropDownListCategories">
-                <label asp-for="Categories" class="control-label"></label>
                 <select multiple="multiple" class="form-control" id="CategoryIds" asp-for="CategoryIds" asp-items="Model.Categories"></select>
             </div>
+
+            <h6>Actors</h6>
             <div class="form-group" id="dropDownListActors">
-                <label asp-for="Actors" class="control-label"></label>
                 <select multiple="multiple" class="form-control" id="ActorIds" asp-for="ActorIds" asp-items="Model.Actors"></select>
             </div>
-
-            <div class="custom-file">
-                <label asp-for="ImageFile" class="control-label"></label>
-                <label for="filename" class="btn btn-outline-dark">Choose file</label>
-                <label class="label_file"></label>
-                <input type="file" id="filename" asp-for="ImageFile" accept="image/*" style="opacity:0" class="custom-file-input">
-            </div>
-
-            <script>
-                $(".custom-file-input").on("change", function () {
-                    var fileName = $(this).val().split("\\").pop();
-                    $(this).siblings(".label_file").addClass("selected").html(fileName);
-                });
-            </script>
-
             <div id="addNewActor">
                 @for (int i = 0; i < Model.NewActors.Count(); i++)
                 {
@@ -68,7 +78,7 @@
             <hr />
 
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-warning" />
+                <input type="submit" value="Save" id="save" class="btn btn-warning" />
             </div>
         </form>
     </div>
@@ -90,5 +100,26 @@
                 }
             });
         });
+    </script>
+
+    <script type="text/javascript">
+        $("#deleteImageBtn").on('click', function () {
+            $.ajax({
+                async: false,
+                url: '/Movie/DeleteImage/@Model.ImageName',
+                success: function () {
+                    $('#deleteImage').hide(),
+                    $('#addImage').show();
+                }
+            });
+        });
+    </script>
+
+    <script type="text/javascript">
+    $("html").ready(function () {
+        if ('@Model.ImageName' == '') {
+            $("#addImage").show();
+        }
+    });
     </script>
 }

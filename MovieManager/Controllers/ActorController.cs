@@ -41,9 +41,9 @@ namespace MovieManager.Controllers
         // POST: ActorController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(ActorAddDto newActor)
+        public async Task<ActionResult> Create(ActorAddDto newActor)
         {
-            _actorService.AddPost(newActor);
+            await _actorService.AddPost(newActor);
             return RedirectToAction(nameof(Index));
         }
 
@@ -88,6 +88,12 @@ namespace MovieManager.Controllers
             };
             await _actorService.AddGrade(newGrade);
             return RedirectToAction(nameof(Details), new { id = actorId });
+        }
+
+        public async Task<ActionResult> DeleteImage(string imageName)
+        {
+            await _actorService.DeleteImage(imageName);
+            return Ok();
         }
     }
 }

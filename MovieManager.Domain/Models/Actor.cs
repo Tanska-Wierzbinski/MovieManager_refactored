@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 
@@ -10,6 +11,13 @@ namespace MovieManager.Domain.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string LastName { get; set; }
+
+        [NotMapped]
+        public string FullName
+        {
+            get { return Name + " " + LastName; }
+        }
+
         public DateTime BornDate { get; set; }
         public DateTime? DeathDate { get; set; }
         public Gender Gender { get; set; }

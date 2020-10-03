@@ -15,6 +15,8 @@ using Microsoft.Extensions.Hosting;
 using AutoMapper;
 using MovieManager.Application.Configuration;
 using MovieManager.Infrastructure.Context;
+using Microsoft.AspNetCore.Authorization;
+using MovieManager.Security;
 
 namespace MovieManager
 {
@@ -39,8 +41,13 @@ namespace MovieManager
             services.AddAutoMapper(typeof(Startup));
             services.AddControllersWithViews();
             services.AddHttpContextAccessor();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("EditReview", policy => policy.AddRequirements(new ManageReviewAuthorNameRequirement()));
+            });
             services.AddRazorPages();
             services.ResolveDependencies();
+            services.AddScoped<IAuthorizationHandler, CanEditOnlyOwnReview>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

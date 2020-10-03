@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using MovieManager.Application.DTOs;
 using MovieManager.Application.DTOs.Actor;
 using MovieManager.Application.DTOs.Category;
@@ -47,8 +48,8 @@ namespace MovieManager.Application.Configuration
             //CreateMap<Movie, MovieIndexDto>().ReverseMap();
             CreateMap<Movie, MovieDetailsDto>()
                 .ForMember(a => a.AverageGrade, src => src.MapFrom(src => src.GetAverageGrade()))
-                .ForMember(m=>m.Actors, src=>src.MapFrom(src=>src.MovieActors.Select(src=>src.Actor)))
-                .ForMember(m=>m.Categories,src=>src.MapFrom(src=>src.MovieCategories.Select(src=>src.Category)))
+                .ForMember(m => m.Actors, src => src.MapFrom(src => src.MovieActors.Select(src => src.Actor)))
+                .ForMember(m => m.Categories, src => src.MapFrom(src => src.MovieCategories.Select(src => src.Category)))
                 .ReverseMap();
             CreateMap<Movie, MovieEditDto>()
                 .ForMember(m => m.ImageFile, src => src.Ignore())

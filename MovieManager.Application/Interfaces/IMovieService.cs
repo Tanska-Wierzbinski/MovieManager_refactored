@@ -20,5 +20,6 @@ namespace MovieManager.Application.Interfaces
         Task EditPost(MovieEditDto movie);
         Task<MovieDto> GetById(int id);
         Task<bool> Remove(int id);
+        Task DeleteImage(string imageName);
     }
 }

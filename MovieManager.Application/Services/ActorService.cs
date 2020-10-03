@@ -11,6 +11,7 @@ using MovieManager.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,8 +46,15 @@ namespace MovieManager.Application.Services
         public async Task AddPost(ActorAddDto actor)
         {
             var newActor = _mapper.Map<Actor>(actor);
+
             await _actorRepository.UploadImage(actor.ImageFile, newActor);
             await _actorRepository.Add(newActor);
+
+            foreach (var movie in actor.MovieIds)
+            {
+                await _movieActorRepository.Add(new MovieActor() { MovieId = movie, ActorId = newActor.Id });
+            }
+
             //foreach (var movie in actor.MovieIds)
             //{
             //    var newMovieActor = new MovieActor()
@@ -75,7 +83,20 @@ namespace MovieManager.Application.Services
         public async Task EditPost(ActorEditDto actor)
         {
             var editedActor = _mapper.Map<Actor>(actor);
+            await _actorRepository.Update(editedActor);
             await _actorRepository.UploadImage(actor.ImageFile, editedActor);
+
+            var movieActors = await _movieActorRepository.Search(ma => ma.ActorId == editedActor.Id);
+            foreach (var ma in movieActors)
+            {
+                await _movieActorRepository.Remove(ma);
+            }
+
+            foreach (var movie in actor.MovieIds)
+            {
+                await _movieActorRepository.Add(new MovieActor() { MovieId = movie, ActorId = editedActor.Id });
+            }
+
             //foreach (var movie in actor.MovieIds)
             //{
             //    var newMovieActor = new MovieActor()
@@ -85,7 +106,6 @@ namespace MovieManager.Application.Services
             //    };
             //    await _movieActorRepository.Add(newMovieActor);
             //}                                                                   DO PRZETESTOWANIA Z MAPPEERM
-            await _actorRepository.Update(editedActor);
         }
 
         public ActorIndexDto GetAllForIndex(GenderDto? gender, int yearMin, int yearMax, int gradeMin, int gradeMax, string[] countries, string sortOrder, int? pageNumber, int pageSize = 5)
@@ -95,7 +115,7 @@ namespace MovieManager.Application.Services
                 Actors = _actorRepository.GetAll().ProjectTo<ActorDto>(_mapper.ConfigurationProvider).AsEnumerable(),
                 GradeMin = gradeMin,
                 GradeMax = gradeMax == 0 ? 10 : gradeMax,
-                YearMax = yearMax == 0 ? 2100 : yearMax ,
+                YearMax = yearMax == 0 ? 2100 : yearMax,
                 YearMin = yearMin == 0 ? yearMax : yearMin,
                 Gender = gender,
                 Countries = countries,
@@ -104,15 +124,17 @@ namespace MovieManager.Application.Services
                 PageSize = pageSize
             };
             Filter(actorsForIndex);
-            Sort(sortOrder, actorsForIndex.Actors);            
+            Sort(actorsForIndex);
+
             actorsForIndex.PaginatedActors = PaginatedList<ActorDto>.Create(actorsForIndex.Actors.AsQueryable(), pageNumber ?? 1, pageSize);
 
             return actorsForIndex;
         }
 
+        //---------------------------------------------------------------------------------------
         private class ActorDtoComparer : IEqualityComparer<ActorDto>
         {
-            public bool Equals([AllowNull]ActorDto first, [AllowNull]ActorDto second)
+            public bool Equals([AllowNull] ActorDto first, [AllowNull] ActorDto second)
             {
                 if (first.Country == second.Country)
                     return true;
@@ -125,6 +147,7 @@ namespace MovieManager.Application.Services
                 return obj.Id.GetHashCode();
             }
         }
+        //---------------------------------------------------------------------------------------
 
         private void Filter(ActorIndexDto actorsForIndex)
         {
@@ -135,48 +158,82 @@ namespace MovieManager.Application.Services
                     actorsForIndex.Actors = actorsForIndex.Actors.Intersect(actorsForIndex.Actors.Where(a => a.Country == country), new ActorDtoComparer());
                 }
             }
-            actorsForIndex.Actors = actorsForIndex.Gender != null ? actorsForIndex.Actors.Where(m => m.Gender == actorsForIndex.Gender)
-                                                                                         .Where(m => m.BornDate.Year >= actorsForIndex.YearMin && m.BornDate.Year <= actorsForIndex.YearMax)//;
-                                                                                         .Where(m => m.Grades.Any())
-                                                                                            .Where(m => m.Grades
-                                                                                                .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
-                                                                                                    .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1)
-                                                                  : actorsForIndex.Actors.Where(m => m.BornDate.Year >= actorsForIndex.YearMin && m.BornDate.Year <= actorsForIndex.YearMax)//;
-                                                                                         .Where(m => m.Grades.Any())
-                                                                                            .Where(m => m.Grades
-                                                                                                .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
-                                                                                                    .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1);
+
+            IEnumerable<ActorDto> filter;
+
+            if (actorsForIndex.Gender != null)
+            {
+                filter = actorsForIndex.Actors.Where(m => m.Gender == actorsForIndex.Gender)
+                                                 .Where(m => m.BornDate.Year >= actorsForIndex.YearMin && m.BornDate.Year <= actorsForIndex.YearMax);
+                //actorsForIndex.Actors = filter.Where(m => m.Grades.Any())
+                //                                .Where(m => m.Grades
+                //                                    .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
+                //                                        .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1);
+                // .Union(filter.Where(a => a.Grades.Any() == false));
+            }
+            else
+            {
+                filter = actorsForIndex.Actors.Where(m => m.BornDate.Year >= actorsForIndex.YearMin && m.BornDate.Year <= actorsForIndex.YearMax);
+
+                //actorsForIndex.Actors = filter.Where(m => m.Grades.Any())
+                //                                 .Where(m => m.Grades
+                //                                    .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
+                //                                        .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1);
+                //  .Union(filter.Where(a => a.Grades.Any() == false));
+            }
+
+            actorsForIndex.Actors = filter.Where(m => m.Grades.Any())
+                                                .Where(m => m.Grades
+                                                    .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
+                                                        .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1);
+
+            if (actorsForIndex.GradeMin == 0)
+            {
+                actorsForIndex.Actors = actorsForIndex.Actors.Union(filter.Where(a => a.Grades.Any() == false));
+            }
+
+            //actorsForIndex.Actors = actorsForIndex.Gender != null ? actorsForIndex.Actors.Where(m => m.Gender == actorsForIndex.Gender)
+            //                                                                             .Where(m => m.BornDate.Year >= actorsForIndex.YearMin && m.BornDate.Year <= actorsForIndex.YearMax)//;
+            //                                                                             .Where(m => m.Grades.Any())
+            //                                                                                .Where(m => m.Grades
+            //                                                                                    .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
+            //                                                                                        .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1)
+            //                                                      : actorsForIndex.Actors.Where(m => m.BornDate.Year >= actorsForIndex.YearMin && m.BornDate.Year <= actorsForIndex.YearMax)//;
+            //                                                                             .Where(m => m.Grades.Any())
+            //                                                                                .Where(m => m.Grades
+            //                                                                                    .Average(m => m.GradeValue) >= actorsForIndex.GradeMin && m.Grades
+            //                                                                                        .Average(m => m.GradeValue) < actorsForIndex.GradeMax + 1);
             //return actorsForIndex;
 
         }
 
-        private void Sort(string sortOrder, IEnumerable<ActorDto> actors)
+        private void Sort(ActorIndexDto actorsForIndex)
         {
-            switch (sortOrder)
+            switch (actorsForIndex.SortOrder)
             {
                 case "nameDesc":
-                    actors = actors.OrderByDescending(m => m.LastName);
+                    actorsForIndex.Actors = actorsForIndex.Actors.OrderByDescending(m => m.LastName);
                     break;
                 case "bornDesc":
-                    actors = actors.OrderByDescending(m => m.BornDate);
+                    actorsForIndex.Actors = actorsForIndex.Actors.OrderByDescending(m => m.BornDate);
                     break;
                 case "born":
-                    actors = actors.OrderBy(m => m.BornDate);
+                    actorsForIndex.Actors = actorsForIndex.Actors.OrderBy(m => m.BornDate);
                     break;
                 case "gradeDesc":
-                    actors = actors.Where(m => m.Grades.Any()).OrderByDescending(m => m.Grades.Average(k => k.GradeValue)).Union(actors);
+                    actorsForIndex.Actors = actorsForIndex.Actors.Where(m => m.Grades.Any()).OrderByDescending(m => m.Grades.Average(k => k.GradeValue)).Union(actorsForIndex.Actors);
                     break;
                 case "grade":
-                    actors = actors.Where(m => m.Grades.Any()).OrderBy(m => m.Grades.Average(k => k.GradeValue)).Union(actors);
+                    actorsForIndex.Actors = actorsForIndex.Actors.Where(m => m.Grades.Any()).OrderBy(m => m.Grades.Average(k => k.GradeValue)).Union(actorsForIndex.Actors);
                     break;
                 case "quantityGradeDesc":
-                    actors = actors.Where(m => m.Grades.Any()).OrderByDescending(m => m.Grades.Count()).Union(actors);
+                    actorsForIndex.Actors = actorsForIndex.Actors.Where(m => m.Grades.Any()).OrderByDescending(m => m.Grades.Count()).Union(actorsForIndex.Actors);
                     break;
                 case "quantityGrade":
-                    actors = actors.Where(m => m.Grades.Any()).OrderBy(m => m.Grades.Count()).Union(actors);
+                    actorsForIndex.Actors = actorsForIndex.Actors.Where(m => m.Grades.Any()).OrderBy(m => m.Grades.Count()).Union(actorsForIndex.Actors);
                     break;
                 default:
-                    actors = actors.OrderBy(m => m.LastName);
+                    actorsForIndex.Actors = actorsForIndex.Actors.OrderBy(m => m.LastName);
                     break;
             }
         }
@@ -194,6 +251,11 @@ namespace MovieManager.Application.Services
         {
             await _actorRepository.Remove(await _actorRepository.GetById(id));
             return true;
+        }
+
+        public async Task DeleteImage(string imageName)
+        {
+            await _actorRepository.DeleteImage(imageName);
         }
     }
 }

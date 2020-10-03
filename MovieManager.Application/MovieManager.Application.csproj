@@ -7,7 +7,6 @@
   <ItemGroup>
     <Folder Include="DTOs\MovieActor\" />
     <Folder Include="DTOs\MovieCategory\" />
-    <Folder Include="ViewModels\" />
   </ItemGroup>
 
   <ItemGroup>

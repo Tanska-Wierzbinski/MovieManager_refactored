@@ -39,7 +39,7 @@ namespace MovieManager.Application.Services
         {
             return new MovieAddDto()
             {
-                Actors = _actorRepository.GetAll().Select(a => new SelectListItem { Text = a.Name + " " + a.LastName, Value = a.Id.ToString() }).ToList(),
+                Actors = _actorRepository.GetAll().Select(a => new SelectListItem { Text = a.FullName, Value = a.Id.ToString() }).ToList(),
                 Categories = _categoryRepository.GetAll().Select(c => new SelectListItem { Text = c.Name, Value = c.Id.ToString() }).ToList()
             };
         }
@@ -47,21 +47,75 @@ namespace MovieManager.Application.Services
         public async Task AddPost(MovieAddDto movie)
         {
             var newMovie = _mapper.Map<Movie>(movie);
+
             await _movieRepository.UploadImage(movie.ImageFile, newMovie);
             await _movieRepository.Add(newMovie);
+
+            foreach (var newActorDto in movie.NewActors)
+            {
+                var newActor = _mapper.Map<Actor>(newActorDto);
+                await _actorRepository.Add(newActor);
+                await _actorRepository.UploadImage(newActorDto.ImageFile, newActor);
+
+                await _movieActorRepository.Add(new MovieActor() { MovieId = newMovie.Id, ActorId = newActor.Id });
+            }
+
+            foreach (var actor in movie.ActorIds)
+            {
+                await _movieActorRepository.Add(new MovieActor() { MovieId = newMovie.Id, ActorId = actor });
+            }
+
+            foreach (var category in movie.CategoryIds)
+            {
+                await _movieCategoryRepository.Add(new MovieCategory() { MovieId = newMovie.Id, CategoryId = category });
+            }
         }
 
         public async Task<MovieEditDto> EditGet(int id)
         {
-            return _mapper.Map<MovieEditDto>(await _movieRepository.GetById(id));
+            var result = _mapper.Map<MovieEditDto>(await _movieRepository.GetById(id));
+            result.Actors = _actorRepository.GetAll().Select(a => new SelectListItem { Text = a.FullName, Value = a.Id.ToString() }).ToList();
+            result.Categories = _categoryRepository.GetAll().Select(c => new SelectListItem { Text = c.Name, Value = c.Id.ToString() }).ToList();
+            return result;
         }
 
         public async Task EditPost(MovieEditDto movie)
         {
             var editedMovie = _mapper.Map<Movie>(movie);
+            await _movieRepository.Update(editedMovie);
             await _movieRepository.UploadImage(movie.ImageFile, editedMovie);
 
-            await _movieRepository.Update(editedMovie);
+            var movieActors = await _movieActorRepository.Search(ma => ma.MovieId == movie.Id);
+            foreach (var ma in movieActors)
+            {
+                await _movieActorRepository.Remove(ma);
+            }
+
+            var movieCategories = await _movieCategoryRepository.Search(mc => mc.MovieId == movie.Id);
+            foreach (var mc in movieCategories)
+            {
+                await _movieCategoryRepository.Remove(mc);
+            }
+
+
+            foreach (var actorId in movie.ActorIds)
+            {
+                await _movieActorRepository.Add(new MovieActor() { ActorId = actorId, MovieId = movie.Id });
+            }
+
+            foreach (var categoryId in movie.CategoryIds)
+            {
+                await _movieCategoryRepository.Add(new MovieCategory() { CategoryId = categoryId, MovieId = movie.Id });
+            }
+
+            foreach (var newActorDto in movie.NewActors)
+            {
+                var newActor = _mapper.Map<Actor>(newActorDto);
+                await _actorRepository.Add(newActor);
+                await _actorRepository.UploadImage(newActorDto.ImageFile, newActor);
+
+                await _movieActorRepository.Add(new MovieActor() { MovieId = editedMovie.Id, ActorId = newActor.Id });
+            }
         }
 
         public MovieIndexDto GetAllForIndex(int yearMin, int yearMax, int gradeMin, int gradeMax, int[] categories, string sortOrder, int? pageNumber, int pageSize = 5)
@@ -80,30 +134,28 @@ namespace MovieManager.Application.Services
                 PageSize = pageSize
             };
             Filter(moviesForIndex);
-            Sort(sortOrder, moviesForIndex.Movies);
+            Sort(moviesForIndex);
             moviesForIndex.PaginatedMovies = PaginatedList<MovieDto>.Create(moviesForIndex.Movies.AsQueryable(), pageNumber ?? 1, pageSize);
 
             return moviesForIndex;
         }
 
-
-
-        
-
+        //-------------------------------------------------------------------------------
         private class MovieDtoComparer : IEqualityComparer<MovieDto>
         {
-            public bool Equals([AllowNull]MovieDto first, [AllowNull]MovieDto second)
+            public bool Equals([AllowNull] MovieDto first, [AllowNull] MovieDto second)
             {
                 if (first.Id == second.Id)
                     return true;
 
                 return false;
             }
-            public int GetHashCode([DisallowNull]MovieDto obj)
+            public int GetHashCode([DisallowNull] MovieDto obj)
             {
                 return obj.Id.GetHashCode();
             }
         }
+        //-------------------------------------------------------------------------------
 
         private void Filter(MovieIndexDto moviesForIndex)
         {
@@ -115,39 +167,48 @@ namespace MovieManager.Application.Services
                     moviesForIndex.Movies = moviesForIndex.Movies.Intersect(moviesWithCategory, new MovieDtoComparer());
                 }
             }
-            moviesForIndex.Movies = moviesForIndex.Movies.Where(m => m.ReleaseDate.Year >= moviesForIndex.YearMin && m.ReleaseDate.Year <= moviesForIndex.YearMax)
-                                                         .Where(m => m.Reviews.Any())
-                                                         .Where(m => m.Reviews.Average(m => m.Grade) >= moviesForIndex.GradeMin && m.Reviews.Average(m => m.Grade) < moviesForIndex.GradeMax + 1);
-      
+
+            var filter = moviesForIndex.Movies.Where(m => m.ReleaseDate.Year >= moviesForIndex.YearMin && m.ReleaseDate.Year <= moviesForIndex.YearMax);
+            moviesForIndex.Movies = filter.Where(m => m.Reviews.Any())
+                                            .Where(m => m.Reviews
+                                                .Average(m => m.Grade) >= moviesForIndex.GradeMin && m.Reviews
+                                                    .Average(m => m.Grade) < moviesForIndex.GradeMax + 1);
+                                            
+
+            if(moviesForIndex.GradeMin == 0)
+            {
+                moviesForIndex.Movies = moviesForIndex.Movies.Union(filter.Where(m => m.Reviews.Any() == false));
+            }
+
         }
 
-        private void Sort(string sortOrder, IEnumerable<MovieDto> movies)
+        private void Sort(MovieIndexDto moviesForIndex)
         {
-            switch (sortOrder)
+            switch (moviesForIndex.SortOrder)
             {
                 case "nameDesc":
-                    movies = movies.OrderByDescending(m => m.Name);
+                    moviesForIndex.Movies = moviesForIndex.Movies.OrderByDescending(m => m.Name);
                     break;
                 case "yearDesc":
-                    movies = movies.OrderByDescending(m => m.ReleaseDate);
+                    moviesForIndex.Movies = moviesForIndex.Movies.OrderByDescending(m => m.ReleaseDate);
                     break;
                 case "year":
-                    movies = movies.OrderBy(m => m.ReleaseDate);
+                    moviesForIndex.Movies = moviesForIndex.Movies.OrderBy(m => m.ReleaseDate);
                     break;
                 case "gradeDesc":
-                    movies = movies.Where(m => m.Reviews.Any()).OrderByDescending(m => m.Reviews.Average(k => k.Grade)).Union(movies);
+                    moviesForIndex.Movies = moviesForIndex.Movies.Where(m => m.Reviews.Any()).OrderByDescending(m => m.Reviews.Average(k => k.Grade)).Union(moviesForIndex.Movies);
                     break;
                 case "grade":
-                    movies = movies.Where(m => m.Reviews.Any()).OrderBy(m => m.Reviews.Average(k => k.Grade)).Union(movies);
+                    moviesForIndex.Movies = moviesForIndex.Movies.Where(m => m.Reviews.Any()).OrderBy(m => m.Reviews.Average(k => k.Grade)).Union(moviesForIndex.Movies);
                     break;
                 case "quantityGradeDesc":
-                    movies = movies.Where(m => m.Reviews.Any()).OrderByDescending(m => m.Reviews.Count()).Union(movies);
+                    moviesForIndex.Movies = moviesForIndex.Movies.Where(m => m.Reviews.Any()).OrderByDescending(m => m.Reviews.Count()).Union(moviesForIndex.Movies);
                     break;
                 case "quantityGrade":
-                    movies = movies.Where(m => m.Reviews.Any()).OrderBy(m => m.Reviews.Count()).Union(movies);
+                    moviesForIndex.Movies = moviesForIndex.Movies.Where(m => m.Reviews.Any()).OrderBy(m => m.Reviews.Count()).Union(moviesForIndex.Movies);
                     break;
                 default:
-                    movies = movies.OrderBy(m => m.Name);
+                    moviesForIndex.Movies = moviesForIndex.Movies.OrderBy(m => m.Name);
                     break;
             }
         }
@@ -179,6 +240,7 @@ namespace MovieManager.Application.Services
                                                      .Take(3)
             };
         }
+
         public SearchDto GetForSearch(string searchString)
         {
             return new SearchDto()
@@ -189,8 +251,12 @@ namespace MovieManager.Application.Services
                 Actors = _actorRepository.GetAll().Where(m => m.Name.ToLower()
                                                   .Contains(searchString.ToLower()))
                                                   .ProjectTo<ActorDto>(_mapper.ConfigurationProvider)
-
             };
+        }
+
+        public async Task DeleteImage(string imageName)
+        {
+            await _movieRepository.DeleteImage(imageName);
         }
     }
 }

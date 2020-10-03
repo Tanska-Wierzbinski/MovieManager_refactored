@@ -10,11 +10,11 @@ namespace MovieManager.Application.DTOs.Movie
     public class MovieDetailsDto : MovieDto
     {
         public IList<ActorDto> Actors { get; set; }
-        public ReviewDto Review { get; set; }
+        public ReviewAddDto Review { get; set; }
         public IList<SelectListItem> SelectListGrade { get; set; }
         public MovieDetailsDto()
         {
-            Review = new ReviewDto();
+            Review = new ReviewAddDto();
             SelectListGrade = new List<SelectListItem>();
             for(int i=1;i<=10;i++)
             {

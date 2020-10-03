@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.UI.V3.Pages.Internal.Account;
 using Microsoft.AspNetCore.Mvc;
+using MovieManager.Application.DTOs.Actor;
 using MovieManager.Application.DTOs.Movie;
 using MovieManager.Application.Interfaces;
 
@@ -74,6 +75,19 @@ namespace MovieManager.Controllers
         {
             await _movieService.Remove(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        public ActionResult AddNewActor()
+        {
+            //var tempActor = new TempActor();
+            //return PartialView("~/Views/Shared/EditorTemplates/TempActor.cshtml", tempActor);
+            return PartialView("~/Views/Shared/EditorTemplates/ActorAddDto.cshtml", new ActorAddDto());
+        }
+
+        public async Task<ActionResult> DeleteImage(string imageName)
+        {
+            await _movieService.DeleteImage(imageName);
+            return Ok();
         }
     }
 }

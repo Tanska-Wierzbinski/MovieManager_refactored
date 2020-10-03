@@ -19,5 +19,6 @@ namespace MovieManager.Application.Interfaces
         Task AddGrade(GradeAddDto grade);
         Task<ActorDto> GetById(int id);
         Task<bool> Remove(int id);
+        Task DeleteImage(string imageName);
     }
 }

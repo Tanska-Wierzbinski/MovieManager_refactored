@@ -55,6 +55,7 @@ namespace MovieManager.Infrastructure.Repositories
                     fileName = fileName + DateTime.Now.ToString("yyMMddss") + extension;
                     Image image = new Image();
                     image.Name = fileName;
+                    image.ImageFile = imageFile;
 
                     string path = Path.Combine(wwwRothPath + "/Image/", fileName);
 
