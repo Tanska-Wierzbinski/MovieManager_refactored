@@ -11,7 +11,7 @@ namespace MovieManager.Application.Interfaces
         Task AddPost(ReviewAddDto review);
         Task<ReviewDto> EditGet(int id);
         Task EditPost(ReviewDto review);
-        Task<ReviewDto> GetById();
+        Task<ReviewDto> GetById(int id);
         Task<bool> Remove(int id);
     }
 }

@@ -10,11 +10,12 @@ namespace MovieManager.Application.Interfaces
 {
     public interface ICategoryService
     {
-        Task<CategoryDetailsDto> GetMoviesByCategory(int id);
-        Task Add(CategoryAddDto category);
+        IQueryable<CategoryDto> GetAllForIndex();
+        CategoryDetailsDto GetMoviesByCategory(int id);
+        Task AddPost(CategoryAddDto category);
         Task<CategoryDto> EditGet(int id);
         Task EditPost(CategoryDto category);
-        Task<CategoryDto> GetById();
+        Task<CategoryDto> GetById(int id);
         Task<bool> Remove(int id);
     }
 }

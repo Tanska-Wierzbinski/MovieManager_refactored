@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
 using MovieManager.Infrastructure.Context;
@@ -16,11 +17,13 @@ namespace MovieManager.Infrastructure.Repositories
     {
         protected readonly MovieManagerContext Db;
         protected readonly DbSet<TEntity> DbSet;
+        //protected readonly IWebHostEnvironment _hostEnvironment;
 
-        protected Repository(MovieManagerContext db)
+        protected Repository(MovieManagerContext db)//, IWebHostEnvironment hostEnvironment)
         {
             Db = db;
             DbSet = db.Set<TEntity>();
+            //_hostEnvironment = hostEnvironment;
         }
 
         public virtual async Task Add(TEntity entity)
@@ -55,26 +58,12 @@ namespace MovieManager.Infrastructure.Repositories
             DbSet.Remove(entity);
             await SaveChanges();
         }
-        public virtual async Task UploadImage(Image image, TEntity entity)
-        {
-            await SaveChanges();
-        }
+        //public virtual async Task UploadImage(IFormFile imageFile, TEntity entity)
+        //{
+        //    await SaveChanges();
+        //}
 
-        public virtual async Task DeleteImage(string imageName)
-        {
-            var result = await Db.Images.SingleOrDefaultAsync(c => c.Name == imageName);
-
-            if (result != null)
-            {
-                var imagePath = Path.Combine(_hostEnvironment.WebRootPath, "Image", result.Name);
-                if (System.IO.File.Exists(imagePath))
-                {
-                    System.IO.File.Delete(imagePath);
-                }
-                Db.Images.Remove(result);
-                await Db.SaveChangesAsync();
-            }
-        }
+        
 
         public async Task<int> SaveChanges()
         {

@@ -1,4 +1,5 @@
-﻿using MovieManager.Domain.Interfaces;
+﻿using Microsoft.AspNetCore.Hosting;
+using MovieManager.Domain.Interfaces;
 using MovieManager.Domain.Models;
 using MovieManager.Infrastructure.Context;
 using System;

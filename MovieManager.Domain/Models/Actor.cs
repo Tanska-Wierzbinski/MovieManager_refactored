@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text;
 
 namespace MovieManager.Domain.Models
@@ -9,19 +11,54 @@ namespace MovieManager.Domain.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public string LastName { get; set; }
-        public DateTime? DeathDate { get; set; }
-        public DateTime BornDate { get; set; }
-        public Gender Gender { get; set; }
-        public string ImageName { get; set; }
-        public string Country { get; set; }
 
+        [NotMapped]
+        public string FullName
+        {
+            get { return Name + " " + LastName; }
+        }
+
+        public DateTime BornDate { get; set; }
+        public DateTime? DeathDate { get; set; }
+        public Gender Gender { get; set; }
+        public string Country { get; set; }
+        public string ImageName { get; set; }
         public IList<MovieActor> MovieActors { get; set; }
         public IList<Grade> Grades { get; set; }
+
+        public Actor()
+        {
+            Grades = new List<Grade>();
+        }
+        public int GetCurrentAge()
+        {
+            int Age;
+            if (DeathDate == null)
+            {
+                DateTime now = DateTime.Now;
+
+                Age = now.Year - BornDate.Year; if (BornDate.Date > now.AddYears(-Age)) { Age--; }
+            }
+            else
+            {
+                Age = DeathDate.Value.Year - BornDate.Year; if (BornDate.Date > DeathDate.Value.AddYears(-Age)) { Age--; }
+            }
+            return Age;
+        }
+        public double? GetAverageGrade()
+        {
+            if (Grades.Any())
+            {
+                return Math.Round(Grades.Average(g => g.GradeValue), 1);
+            }
+            else return null;
+
+        }
     }
 
     public enum Gender
     {
-        Male,
-        Female
+        Male=2,
+        Female=0
     }
 }
